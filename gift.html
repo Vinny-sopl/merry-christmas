@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Christmas Blessing</title>
+    <style>
+        :root {
+            --red: #d42426;
+            --green: #165b33;
+            --gold: #f8b229;
+            --white: #ffffff;
+            --blue: #2e6cb2;
+            --angpao: #ff3e3e; 
+        }
+
+        body {
+            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; 
+            background: radial-gradient(circle, #1a472a, #072211);
+            transition: background 2s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--white); overflow: hidden; text-align: center;
+        }
+
+        /* Sky Levels */
+        .sky-level-1 { background: radial-gradient(circle, #1a472a, #072211); }
+        .sky-level-2 { background: radial-gradient(circle, #0f2027, #203a43, #2c5364); }
+        .sky-level-3 { background: radial-gradient(circle, #240b36, #c31432); }
+
+        .light-string { position: fixed; top: 0; left: 0; width: 100%; height: 20px; display: flex; justify-content: space-around; z-index: 3000; pointer-events: none; }
+        .bulb { width: 10px; height: 15px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; position: relative; animation: blink 1.5s infinite alternate; }
+        @keyframes blink { from { opacity: 0.4; filter: brightness(0.6); } to { opacity: 1; filter: brightness(1.3) drop-shadow(0 0 8px currentColor); } }
+
+        .snowflake { position: fixed; top: -10px; color: white; font-size: 1em; user-select: none; z-index: 1000; pointer-events: none; animation: fall linear infinite; text-shadow: 0 0 5px rgba(255,255,255,0.8); }
+        @keyframes fall { to { transform: translateY(105vh) translateX(20px); } }
+
+        .confetti { position: fixed; width: 8px; height: 8px; z-index: 1500; pointer-events: none; }
+
+        .stage { display: none; width: 90%; max-width: 500px; animation: fadeIn 0.8s ease; position: relative; z-index: 10; }
+        #gift-stage { display: block; }
+
+        .welcome-title { color: var(--gold); font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px #000; }
+        .welcome-verse { font-style: italic; font-size: 1rem; margin-bottom: 30px; line-height: 1.6; color: #eee; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+        
+        /* Gift Bouncing and Shaking */
+        .gift-emoji { font-size: 100px; cursor: pointer; display: inline-block; transition: transform 0.2s; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+        .gift-shake { animation: shakeGift 0.4s ease-in-out !important; }
+        @keyframes shakeGift {
+            0% { transform: rotate(0deg) scale(1.2); }
+            25% { transform: rotate(15deg) scale(1.2); }
+            50% { transform: rotate(-15deg) scale(1.2); }
+            75% { transform: rotate(15deg) scale(1.2); }
+            100% { transform: rotate(0deg) scale(1.2); }
+        }
+
+        input[type="text"] { padding: 10px; border-radius: 10px; border: 2px solid var(--gold); background: rgba(255,255,255,0.1); color: white; margin-bottom: 15px; font-size: 1rem; width: 80%; text-align: center; }
+
+        .angpao-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 20px; }
+        .angpao { width: 70px; height: 110px; background: var(--angpao); border: 2px solid var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; transition: 0.3s; color: var(--gold); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+
+        #toolbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
+        .toolbox-content { background: var(--green); padding: 25px; border-radius: 20px; border: 2px solid var(--gold); max-width: 450px; width: 100%; }
+        .emotion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .emotion-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--gold); color: white; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; }
+
+        #game-stage { width: 100%; height: 100vh; position: relative; max-width: none; }
+        #basket { position: absolute; bottom: 30px; left: 50%; width: 80px; height: 60px; transform: translateX(-50%); font-size: 50px; cursor: none; transition: left 0.1s ease-out; z-index: 20; }
+        .falling-item { position: absolute; font-size: 35px; user-select: none; }
+        .stats { position: absolute; top: 40px; width: 100%; display: flex; justify-content: space-around; font-size: 20px; color: var(--gold); font-weight: bold; z-index: 100; text-shadow: 1px 1px 2px black; }
+
+        .combo-text { position: absolute; font-weight: bold; color: var(--gold); font-size: 2rem; z-index: 50; pointer-events: none; animation: popFade 0.8s ease-out forwards; text-shadow: 0 0 10px white; }
+
+        /* Milestone Popup Style */
+        .milestone-popup {
+            position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(248, 178, 41, 0.95); color: #000;
+            padding: 15px 30px; border-radius: 50px; font-weight: bold; font-size: 1.2rem;
+            z-index: 5000; border: 3px solid white; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            animation: milestonePop 2.5s ease-out forwards;
+        }
+        @keyframes milestonePop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            15% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; }
+            100% { transform: translate(-50%, -100%) scale(0.8); opacity: 0; }
+        }
+
+        .message-box { background: rgba(255, 255, 255, 0.1); padding: 30px; border-radius: 20px; border: 2px solid var(--gold); backdrop-filter: blur(8px); }
+        button { background: var(--red); color: white; border: none; padding: 12px 25px; font-size: 1rem; border-radius: 25px; cursor: pointer; margin-top: 10px; font-weight: bold; transition: 0.2s; }
+        
+        .rank-tag { font-size: 1.5rem; color: var(--gold); font-weight: bold; margin: 10px 0; display: block; }
+        .high-score { font-size: 0.9rem; opacity: 0.8; margin-top: 5px; }
+
+        @keyframes popFade { 0% { opacity: 0; transform: translateY(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-50px); } }
+        @keyframes squish { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.3, 0.7); } 100% { transform: translateX(-50%) scale(1); } }
+        .squish-effect { animation: squish 0.2s ease-out; }
+        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-10px, 5px); } 50% { transform: translate(10px, -5px); } 75% { transform: translate(-5px, 5px); } }
+        .shake-effect { animation: shake 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="sky-level-1">
+
+    <div class="light-string" id="lightString"></div>
+
+    <audio id="bgMusic" loop>
+        <source src="mistletoa.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="gift-stage" class="stage">
+        <h1 class="welcome-title">Merry Christmas!</h1>
+        <p class="welcome-verse">"Trust in the Lord with all your heart..." <strong>— Proverbs 3:5–6</strong></p>
+        <input type="text" id="playerName" placeholder="Name (Optional)" maxlength="15"><br>
+        <div class="gift-emoji" id="mainGift" onclick="handleGiftClick()">🎁</div>
+        <div style="margin-top:20px; color: var(--gold);">Tap to Open Your Gift</div>
+    </div>
+
+    <div id="angpao-stage" class="stage">
+        <h2 style="color: var(--gold);">Pick an Angpao, <span class="user-name"></span>! 🧧</h2>
+        <div class="angpao-container">
+            <div class="angpao" onclick="selectAngpao(0)">🧧</div>
+            <div class="angpao" onclick="selectAngpao(1)">🧧</div>
+            <div class="angpao" onclick="selectAngpao(2)">🧧</div>
+            <div class="angpao" onclick="selectAngpao(3)">🧧</div>
+            <div class="angpao" onclick="selectAngpao(4)">🧧</div>
+        </div>
+        <br>
+        <button onclick="showStage('gift-stage')">← Back</button>
+    </div>
+
+    <div id="witty-stage" class="stage">
+        <div class="message-box">
+            <h2 style="color: var(--gold);">🧧 Lucky Message</h2>
+            <p id="witty-content" style="font-size: 1.2rem; font-style: italic;"></p>
+            <button onclick="showIntro()">Continue</button>
+        </div>
+    </div>
+
+    <div id="intro-stage" class="stage">
+        <div class="message-box">
+            <h1>Let's Catch Blessings! 🎄</h1>
+            <p>Catch items to build your <b>Combo</b>.<br>Avoid the <b>Coal (💣)</b>.</p>
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; margin: 15px 0;">
+                🔥 5 Combo = Double Points!
+            </div>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+
+    <div id="game-stage" class="stage">
+        <div class="stats">
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">❤️❤️❤️</span></div>
+        </div>
+        <div id="basket">🧺</div>
+    </div>
+
+    <div id="result-stage" class="stage">
+        <div class="message-box">
+            <h2 id="result-title">Game Over!</h2>
+            <span id="rank-display" class="rank-tag"></span>
+            <p id="personal-end-msg"></p>
+            <div id="comfort-message" style="margin: 15px 0; font-style: italic; color: var(--gold);"></div>
+            <div id="high-score-display" class="high-score"></div>
+            
+            <button onclick="resetGame()">Play Again</button>
+            <button style="background: var(--blue);" onclick="shareBlessing()">📤 Share Score</button><br>
+            <button style="background: var(--green); width: 100%; margin-top: 15px;" onclick="toggleToolbox(true)">📖 Spiritual Survival Kit</button>
+        </div>
+    </div>
+
+    <div id="toolbox-overlay">
+        <div class="toolbox-content">
+            <h2 style="color: var(--gold); margin-top: 0;">God is with you...</h2>
+            <div class="emotion-grid">
+                <button class="emotion-btn" onclick="getVerse('Afraid')">Afraid</button>
+                <button class="emotion-btn" onclick="getVerse('Worried')">Worried</button>
+                <button class="emotion-btn" onclick="getVerse('Doubtful')">Doubtful</button>
+                <button class="emotion-btn" onclick="getVerse('Ashamed')">Ashamed</button>
+                <button class="emotion-btn" onclick="getVerse('Sorry')">Sorry</button>
+                <button class="emotion-btn" onclick="getVerse('Guilty')">Guilty</button>
+                <button class="emotion-btn" onclick="getVerse('Desperate')">Desperate</button>
+                <button class="emotion-btn" onclick="getVerse('Abandoned')">Abandoned</button>
+                <button class="emotion-btn" onclick="getVerse('Tempted')">Tempted</button>
+                <button class="emotion-btn" onclick="getVerse('Discouraged')">Discouraged</button>
+            </div>
+            <div id="verse-display" style="margin: 20px 0; font-style: italic;">Pick an emotion.</div>
+            <button style="width: 100%;" onclick="toggleToolbox(false)">Back</button>
+        </div>
+    </div>
+
+    <script>
+        let userName = "Friend";
+        let score = 0, lives = 3, combo = 0, gameActive = false, spawnTimer;
+        let highScore = localStorage.getItem('xmasHighScore') || 0;
+
+        const scoreMilestones = {
+            10: "Uy, nagsisimula na siya! 🏃‍♂️",
+            20: "Galing! Keep it up! ✨",
+            30: "Focus yarn? Handa na ang kainan! 🍽️",
+            40: "Grabe, ang bilis ng kamay! 🔥",
+            50: "LEGENDARY BLESSINGS! 👑"
+        };
+
+        function showMilestoneMessage(text) {
+            const popup = document.createElement('div');
+            popup.className = 'milestone-popup';
+            popup.innerText = text;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 2500);
+        }
+
+        const playSfx = (freq) => {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = freq; osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+            setTimeout(() => ctx.close(), 100);
+        };
+
+        const lightColors = ['#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff'];
+        const lightBox = document.getElementById('lightString');
+        for(let i=0; i<25; i++) {
+            const bulb = document.createElement('div');
+            bulb.className = 'bulb';
+            bulb.style.backgroundColor = lightColors[i % 5];
+            bulb.style.animationDelay = (Math.random() * 2) + 's';
+            lightBox.appendChild(bulb);
+        }
+
+        function handleGiftClick() {
+            const gift = document.getElementById('mainGift');
+            gift.classList.add('gift-shake');
+            
+            setTimeout(() => {
+                const input = document.getElementById('playerName').value.trim();
+                if(input) userName = input;
+                document.querySelectorAll('.user-name').forEach(el => el.innerText = userName);
+                document.getElementById('bgMusic').play().catch(e => {});
+                showStage('angpao-stage');
+                gift.classList.remove('gift-shake');
+            }, 500);
+        }
+
+        const wittyMessages = [
+            "Ninong/Ninang nasan kana hindi naman ako manghihingi ako ng pamasko sayo hehe.",
+            "Sana ang pag-ibig mo ay parang Christmas Lights—nagliliwanag, hindi pundi.",
+            "Huwag kang mag-alala kung wala kang gift, ang mahalaga ay 'present' ka sa kainan!",
+            "Sana ngayong Pasko, ang crush mo ay parang Hamon naka-abang lang sa'yo.",
+            "Ang wish ko sa'yo ay parang Spaghetti! Mahaba ang buhay at laging 'sweet'!"
+        ];
+
+        function selectAngpao(idx) {
+            document.getElementById('witty-content').innerText = wittyMessages[idx];
+            showStage('witty-stage');
+            burstConfetti();
+        }
+
+        function burstConfetti() {
+            for(let i=0; i<30; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.backgroundColor = lightColors[Math.floor(Math.random()*5)];
+                document.body.appendChild(c);
+                c.animate([{ opacity: 1 }, { transform: `translateY(100vh) rotate(720deg)`, opacity: 0 }], { duration: 2000 }).onfinish = () => c.remove();
+            }
+        }
+
+        const verses = {
+            'Afraid': '"When I am afraid, I put my trust in you." - Psalm 56:3',
+            'Worried': '"Cast all your anxiety on him because he cares for you." - 1 Peter 5:7',
+            'Doubtful': '"Jesus reached out his hand and caught him." - Matt 14:31',
+            'Ashamed': '"Those who look to him are radiant." - Psalm 34:5',
+            'Sorry': '"The Lord is close to the brokenhearted." - Psalm 34:18',
+            'Guilty': '"If we confess, he is faithful to forgive." - 1 John 1:9',
+            'Desperate': '"Those who hope in the Lord renew strength." - Isa 40:31',
+            'Abandoned': '"I will never leave you nor forsake you." - Heb 13:5',
+            'Tempted': '"God will not let you be tempted beyond your strength." - 1 Cor 10:13',
+            'Discouraged': '"Be strong... for the Lord is with you." - Joshua 1:9'
+        };
+
+        function getVerse(emotion) { document.getElementById('verse-display').innerHTML = verses[emotion]; }
+        function toggleToolbox(show) { document.getElementById('toolbox-overlay').style.display = show ? 'flex' : 'none'; }
+
+        function showStage(id) {
+            document.querySelectorAll('.stage').forEach(s => s.style.display = 'none');
+            document.getElementById(id).style.display = (id === 'game-stage' ? 'flex' : 'block');
+        }
+
+        function showIntro() { showStage('intro-stage'); }
+
+        function startGame() {
+            score = 0; lives = 3; combo = 0; gameActive = true;
+            document.getElementById('score').innerText = score;
+            document.body.className = 'sky-level-1';
+            updateLivesDisplay();
+            showStage('game-stage');
+            spawnItem();
+        }
+
+        document.addEventListener('mousemove', e => { if(gameActive) document.getElementById('basket').style.left = e.clientX + 'px'; });
+        document.addEventListener('touchmove', e => { 
+            if(gameActive) { document.getElementById('basket').style.left = e.touches[0].clientX + 'px'; e.preventDefault(); }
+        }, {passive: false});
+
+        function spawnItem() {
+            if (!gameActive) return;
+            const item = document.createElement('div');
+            item.className = 'falling-item';
+            const rand = Math.random();
+            let type = "blessing";
+            if (rand < 0.15) { item.innerHTML = '💣'; type = "coal"; }
+            else if (rand < 0.20) { item.innerHTML = '✝️'; type = "gold"; item.style.filter = "drop-shadow(0 0 5px gold)"; }
+            else { item.innerHTML = ['⭐', '❄️', '🍬', '🎁', '✨'][Math.floor(Math.random() * 5)]; }
+
+            item.style.left = Math.random() * (window.innerWidth - 40) + 'px';
+            item.style.top = '-50px';
+            document.getElementById('game-stage').appendChild(item);
+
+            let posY = -50;
+            let fallInterval = setInterval(() => {
+                if (!gameActive) { item.remove(); clearInterval(fallInterval); return; }
+                posY += 4 + (score * 0.08);
+                item.style.top = posY + 'px';
+                let b = document.getElementById('basket').getBoundingClientRect();
+                let i = item.getBoundingClientRect();
+
+                if (i.bottom >= b.top && i.left < b.right && i.right > b.left) {
+                    handleCatch(type);
+                    item.remove(); clearInterval(fallInterval);
+                } else if (posY > window.innerHeight) {
+                    if(type !== "coal") handleMiss();
+                    item.remove(); clearInterval(fallInterval);
+                }
+            }, 20);
+            spawnTimer = setTimeout(spawnItem, 1000 - Math.min(score * 8, 700));
+        }
+
+        function handleCatch(type) {
+            const basket = document.getElementById('basket');
+            basket.classList.add('squish-effect');
+            setTimeout(() => basket.classList.remove('squish-effect'), 200);
+
+            if(type === "coal") {
+                lives--; combo = 0; playSfx(150); triggerShake();
+            } else {
+                combo++;
+                playSfx(type === "gold" ? 800 : 400);
+                let mult = combo >= 5 ? 2 : 1;
+                score += (type === "gold" ? 5 : 1) * mult;
+                if(combo === 5) showComboEffect("🔥 2x MULTIPLIER!");
+            }
+
+            if(score > 20 && score <= 50) document.body.className = 'sky-level-2';
+            if(score > 50) document.body.className = 'sky-level-3';
+            
+            if (scoreMilestones[score]) showMilestoneMessage(scoreMilestones[score]);
+
+            document.getElementById('score').innerText = score;
+            updateLivesDisplay();
+            if (lives <= 0) endGame();
+        }
+
+        function handleMiss() {
+            lives--; combo = 0; triggerShake(); updateLivesDisplay();
+            if (lives <= 0) endGame();
+        }
+
+        function showComboEffect(msg) {
+            const txt = document.createElement('div');
+            txt.className = 'combo-text';
+            txt.innerText = msg;
+            txt.style.left = '50%'; txt.style.top = '150px';
+            document.getElementById('game-stage').appendChild(txt);
+            setTimeout(() => txt.remove(), 800);
+        }
+
+        function triggerShake() {
+            const s = document.getElementById('game-stage');
+            s.classList.add('shake-effect');
+            setTimeout(() => s.classList.remove('shake-effect'), 300);
+        }
+
+        function updateLivesDisplay() {
+            let h = ""; for(let i=0; i<lives; i++) h += "❤️";
+            document.getElementById('lives').innerText = h || "💔";
+        }
+
+        function endGame() {
+            gameActive = false; clearTimeout(spawnTimer);
+            if(score > highScore) {
+                highScore = score;
+                localStorage.setItem('xmasHighScore', highScore);
+            }
+            let rank = score > 100 ? "Archangel" : score > 50 ? "Christmas Star" : score > 20 ? "Catcher" : "Beginner";
+            document.getElementById('result-title').innerText = `Score: ${score}`;
+            document.getElementById('rank-display').innerText = `Rank: ${rank}`;
+            document.getElementById('personal-end-msg').innerText = `Well done, ${userName}!`;
+            document.getElementById('high-score-display').innerText = `Personal Best: ${highScore}`;
+            document.getElementById('comfort-message').innerText = score <= 30 ? `"The Lord is my shepherd."` : `"Every gift is from above."`;
+            showStage('result-stage');
+        }
+
+        function shareBlessing() {
+            const t = `🎄 I scored ${score} in "A Christmas Blessing"! Rank: ${document.getElementById('rank-display').innerText}. Can you beat me? 🎁`;
+            if (navigator.share) navigator.share({ title: 'Xmas Blessing', text: t, url: window.location.href });
+            else { navigator.clipboard.writeText(t); alert("Score copied! ❤️"); }
+        }
+
+        function resetGame() { startGame(); }
+        setInterval(() => {
+            const s = document.createElement('div');
+            s.innerHTML = '❄'; s.className = 'snowflake';
+            s.style.left = Math.random() * 100 + 'vw';
+            s.style.animationDuration = Math.random() * 3 + 2 + 's';
+            document.body.appendChild(s);
+            setTimeout(() => s.remove(), 5000);
+        }, 300);
+    </script>
+</body>
+</html>
